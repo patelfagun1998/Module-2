@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 import random
 from typing import Iterable, Optional, Sequence, Tuple, Union
 
@@ -43,8 +44,13 @@ def index_to_position(index: Index, strides: Strides) -> int:
         Position in storage
     """
 
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
+    out = 0
+
+    for i, pos in enumerate(index):
+
+        out += pos*strides[i]
+    
+    return out
 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -60,8 +66,12 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
+    
+    cur = ordinal
+
+    for i in range(len(shape)-1, -1, -1):
+        out_index[i] = cur % shape[i]
+        cur //= shape[i]
 
 
 def broadcast_index(
@@ -83,8 +93,14 @@ def broadcast_index(
     Returns:
         None
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    offset = len(big_shape) - len(shape)
+
+    for i in range(len(shape)):
+
+        if shape[i] == 1:
+            out_index[i] = 0
+        else:
+            out_index[i] = big_index[i+offset]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -101,8 +117,31 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     Raises:
         IndexingError : if cannot broadcast
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    if len(shape1) > len(shape2):
+        temp = shape1
+        shape1 = shape2
+        shape2 = temp
+    
+    out = np.zeros(len(shape2))
+
+    delta = len(shape2) - len(shape1)
+    
+    for i in range(len(shape2)):
+
+        if i < delta:
+            out[i] = shape2[i]
+            continue
+    
+        shape1_index = i-delta
+            
+        if (shape2[i] != 1 and shape1[shape1_index] != 1) and (shape2[i] != shape1[shape1_index]):
+            raise IndexingError
+        elif shape2[i] == 1:
+            out[i] = shape1[shape1_index]
+        else:
+            out[i] = shape2[i]
+        
+    return tuple(out)
 
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
@@ -222,8 +261,16 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
-        # TODO: Implement for Task 2.1.
-        raise NotImplementedError("Need to implement for Task 2.1")
+        new_shape = np.zeros(len(self._shape))
+        new_stride = np.zeros(len(self._strides))
+
+        for i,pos in enumerate(order):
+            new_shape[i] = self._shape[pos]
+            new_stride[i] = self._strides[pos]
+
+        # Convert numpy arrays to lists for compatibility with TensorData __init__ type requirements
+        return TensorData(self._storage, tuple(new_shape), tuple(new_stride))
+
 
     def to_string(self) -> str:
         s = ""
