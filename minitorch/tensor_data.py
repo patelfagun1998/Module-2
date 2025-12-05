@@ -122,7 +122,7 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
         shape1 = shape2
         shape2 = temp
     
-    out = np.zeros(len(shape2))
+    out = np.zeros(len(shape2), dtype=np.int32)
 
     delta = len(shape2) - len(shape1)
     
@@ -228,8 +228,8 @@ class TensorData:
         return index_to_position(array(index), self._strides)
 
     def indices(self) -> Iterable[UserIndex]:
-        lshape: Shape = array(self.shape)
-        out_index: Index = array(self.shape)
+        lshape: Shape = array(self.shape, dtype=np.int32)
+        out_index: Index = array(self.shape, dtype=np.int32)
         for i in range(self.size):
             to_index(i, lshape, out_index)
             yield tuple(out_index)
@@ -261,8 +261,8 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
-        new_shape = np.zeros(len(self._shape))
-        new_stride = np.zeros(len(self._strides))
+        new_shape = np.zeros(len(self._shape), dtype=np.int32)
+        new_stride = np.zeros(len(self._strides), dtype=np.int32)
 
         for i,pos in enumerate(order):
             new_shape[i] = self._shape[pos]
